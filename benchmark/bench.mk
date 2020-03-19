@@ -116,47 +116,12 @@ $(OUTPUT_DIR):
 	mkdir -p $@
 
 # Ordered to reuse input graphs to increase OS file cache hit probability
-BENCH_ORDER = \
-	bfs-twitter pr-twitter cc-twitter bc-twitter \
-	bfs-web pr-web cc-web bc-web \
-	bfs-road pr-road cc-road bc-road \
-	bfs-kron pr-kron cc-kron bc-kron tc-kron \
-	bfs-urand pr-urand cc-urand bc-urand tc-urand \
-	sssp-twitter sssp-web sssp-road sssp-kron sssp-urand \
-	tc-twitter tc-web tc-road
+BENCH_ORDER =	tc-kron tc-urand tc-twitter tc-web tc-road
 
 OUTPUT_FILES = $(addsuffix .out, $(addprefix $(OUTPUT_DIR)/, $(BENCH_ORDER)))
 
 .PHONY: bench-run
 bench-run: $(OUTPUT_DIR) $(OUTPUT_FILES)
-
-$(OUTPUT_DIR)/bfs-%.out : $(GRAPH_DIR)/%.sg bfs
-	./bfs -f $< -n64 > $@
-
-SSSP_ARGS = -n64
-$(OUTPUT_DIR)/sssp-twitter.out: $(GRAPH_DIR)/twitter.wsg sssp
-	./sssp -f $< $(SSSP_ARGS) -d2 > $@
-
-$(OUTPUT_DIR)/sssp-web.out: $(GRAPH_DIR)/web.wsg sssp
-	./sssp -f $< $(SSSP_ARGS) -d2 > $@
-
-$(OUTPUT_DIR)/sssp-road.out: $(GRAPH_DIR)/road.wsg sssp
-	./sssp -f $< $(SSSP_ARGS) -d50000 > $@
-
-$(OUTPUT_DIR)/sssp-kron.out: $(GRAPH_DIR)/kron.wsg sssp
-	./sssp -f $< $(SSSP_ARGS) -d2 > $@
-
-$(OUTPUT_DIR)/sssp-urand.out: $(GRAPH_DIR)/urand.wsg sssp
-	./sssp -f $< $(SSSP_ARGS) -d2 > $@
-
-$(OUTPUT_DIR)/pr-%.out: $(GRAPH_DIR)/%.sg pr
-	./pr -f $< -i1000 -t1e-4 -n16 > $@
-
-$(OUTPUT_DIR)/cc-%.out: $(GRAPH_DIR)/%.sg cc
-	./cc -f $< -n16 > $@
-
-$(OUTPUT_DIR)/bc-%.out: $(GRAPH_DIR)/%.sg bc
-	./bc -f $< -i4 -n16 > $@
 
 $(OUTPUT_DIR)/tc-%.out: $(GRAPH_DIR)/%U.sg tc
 	./tc -f $< -n3 > $@

@@ -36,13 +36,13 @@ test-build: all
 #-----------------------------------------------------------------------#
 
 # Since all implementations use same code for this, only test one kernel
-GENERATE_KERNEL = bfs
+GENERATE_KERNEL = tc
 
 # Built-in synthetic graph generators
 test-generate: test-generate-g10 test-generate-u10
 
 test/out/generate-%.out: test/out $(GENERATE_KERNEL)
-	./$(GENERATE_KERNEL) -$* -n0 > $@
+	./$(GENERATE_KERNEL) -$* -n0 -s > $@
 
 .SECONDARY: # want to keep all intermediate files (test outputs)
 test-generate-%: test/out/generate-%.out
