@@ -1,4 +1,5 @@
 #include <set>
+#include <algorithm>
 
 #include "benchmark.h"
 #include "builder.h"
@@ -33,6 +34,41 @@ size_t NodeIterator(const Graph &g) {
   return total / 3;
 }
 
+// for each edge (u, v) intersect the neighbours of u with the neighbours of v
+// the size of the intersection determines the number of newly found triangles
+// we only intersect elements in an ordered fashion to avoid double counting
+size_t EdgeIterator(const Graph &g) {
+  size_t total = 0;
+
+  vector<NodeID> u_and_v;
+  u_and_v.reserve(g.num_nodes());
+
+  for(NodeID u : g.vertices()) {
+    for(NodeID v : g.out_neigh(u)) {
+      if(u < v) {
+        auto order = [=](NodeID x) { return x <= max(u, v); };
+
+        vector<NodeID> u_neigh(g.out_neigh(u).begin(), g.out_neigh(u).end());
+        auto u_end = remove_if(u_neigh.begin(), u_neigh.end(), order);
+        u_neigh.resize(u_end - u_neigh.begin());
+
+        vector<NodeID> v_neigh(g.out_neigh(v).begin(), g.out_neigh(v).end());
+        auto v_end = remove_if(v_neigh.begin(), v_neigh.end(), order);
+        v_neigh.resize(v_end - v_neigh.begin());
+
+        auto new_end = set_intersection(u_neigh.begin(), u_neigh.end(),
+                                        v_neigh.begin(), v_neigh.end(),
+                                        u_and_v.begin());
+
+        u_and_v.resize(new_end - u_and_v.begin());
+        total += u_and_v.size();
+      }
+    }
+  }
+
+  return total;
+}
+
 // Compares with simple serial implementation that uses std::set_intersection
 bool TCVerifier(const Graph &g, size_t test_total) {
   size_t total = 0;
@@ -65,6 +101,8 @@ int main(int argc, char* argv[]) {
     cout << "Input graph is directed but tc requires undirected" << endl;
     return -2;
   }
+
   BenchmarkKernel(cli, g, NodeIterator, PrintTriangleStats, TCVerifier);
+  BenchmarkKernel(cli, g, EdgeIterator, PrintTriangleStats, TCVerifier);
   return 0;
 }
