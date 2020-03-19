@@ -56,7 +56,7 @@ test-load: test-load-4.gr test-load-4.el test-load-4.wel test-load-4.graph \
 					 test-load-4w.graph test-load-4.mtx test-load-4w.mtx
 
 test/out/load-%.out: test/out $(GENERATE_KERNEL)
-	./$(GENERATE_KERNEL) -f test/graphs/$* -n0 > $@
+	./$(GENERATE_KERNEL) -f test/graphs/$* -n0 -s > $@
 
 .SECONDARY: # want to keep all intermediate files (test outputs)
 test-load-%: test/out/load-%.out
