@@ -88,10 +88,14 @@ bool WorthRelabelling(const Graph &g) {
 
 // uses heuristic to see if worth relabeling
 size_t Hybrid(const Graph &g) {
-  if (WorthRelabelling(g))
+  if (WorthRelabelling(g)) {
+    cout << "RELABELING GRAPH" << endl;
     return OrderedCount(Builder::RelabelByDegree(g));
-  else
+  }
+  else {
+    cout << "NO RELABELING" << endl;
     return OrderedCount(g);
+  }
 }
 
 
