@@ -1,10 +1,8 @@
-bc
-bfs
-cc
 converter
-pr
-sssp
 tc
+tc_edge_iterator
+tc_node_iterator
+tc_reuse
 
 test/out/*.out
 
