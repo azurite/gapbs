@@ -16,7 +16,7 @@ ifneq ($(SERIAL), 1)
 	CXX_FLAGS += $(PAR_FLAG)
 endif
 
-KERNELS = tc my_tc
+KERNELS = tc tc_node_iterator tc_edge_iterator
 SUITE = $(KERNELS) converter
 
 .PHONY: all
