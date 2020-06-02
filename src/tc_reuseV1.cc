@@ -57,22 +57,22 @@ size_t TCReuseV1(const Graph &g) {
 
   // find all "dense" neighborhoods
   for(NodeID u : g.vertices()) {
-    auto *it = g.out_neigh(u).begin();
-    NodeID prev = *it;
 
     bool dense_node = true;
-    while(++it != g.out_neigh(u).end()) {
-      if((prev + 1) != *it) {
-        dense_node = false;
-        break;
+    if(g.out_degree(u) > 1) {
+      NodeID prev = *(g.out_neigh(u).begin()); // first neighbor
+
+      for(auto *it = g.out_neigh(u).begin() + 1; it != g.out_neigh(u).end(); ++it) {
+        if((prev + 1) != *it) {
+          dense_node = false;
+          break;
+        }
+
+        prev = *it;
       }
     }
 
-    if(dense_node)
-      isDense[u] = true;
-    else
-      isDense[u] = false;
-
+    isDense[u] = dense_node;
     isDeleted[u] = false; // just initialization at this point
   }
 
