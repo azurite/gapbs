@@ -28,7 +28,7 @@ test/out:
 
 # Need to be able to build kernels, if this fails rest not run
 test-build: all
-	@echo " $(PASS) Build"
+	@echo -e " $(PASS) Build"
 
 
 
@@ -47,8 +47,8 @@ test/out/generate-%.out: test/out $(GENERATE_KERNEL)
 .SECONDARY: # want to keep all intermediate files (test outputs)
 test-generate-%: test/out/generate-%.out
 	@if grep -q "`cat test/reference/graph-$*.out`" $<; \
-		then echo " $(PASS) Generates $*"; \
-		else echo " $(FAIL) Generates $*"; \
+		then echo -e " $(PASS) Generates $*"; \
+		else echo -e " $(FAIL) Generates $*"; \
 	fi
 
 # Loading graphs from files
@@ -61,8 +61,8 @@ test/out/load-%.out: test/out $(GENERATE_KERNEL)
 .SECONDARY: # want to keep all intermediate files (test outputs)
 test-load-%: test/out/load-%.out
 	@if grep -q "`cat test/reference/graph-$*.out`" $<; \
-		then echo " $(PASS) Load $*"; \
-		else echo " $(FAIL) Load $*"; \
+		then echo -e " $(PASS) Load $*"; \
+		else echo -e " $(FAIL) Load $*"; \
 	fi
 
 
@@ -79,8 +79,8 @@ test/out/verify-%-$(TEST_GRAPH).out: test/out %
 .SECONDARY:
 test-verify-%-$(TEST_GRAPH): test/out/verify-%-$(TEST_GRAPH).out
 	@if grep -q "Verification:           PASS" $<; \
-		then echo " $(PASS) Verify $*"; \
-		else echo " $(FAIL) Verify $*"; \
+		then echo -e " $(PASS) Verify $*"; \
+		else echo -e " $(FAIL) Verify $*"; \
 	fi
 
 test-verify: $(addsuffix -$(TEST_GRAPH), $(addprefix test-verify-, $(KERNELS)))
