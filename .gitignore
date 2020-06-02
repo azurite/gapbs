@@ -3,6 +3,7 @@ tc
 tc_edge_iterator
 tc_node_iterator
 tc_reuse
+tc_reuseV1
 
 test/out/*.out
 
