@@ -20,11 +20,36 @@ using namespace std;
 // a subset of neighborhood of y in constant time doing bounds checking.
 // Both neighborhoods are sorted in increasing order
 bool subseteq(const Graph &g, const NodeID x, const NodeID y, bool *isDense) {
-  NodeID x_min = *(g.out_neigh(x).begin());
-  NodeID x_max = *(g.out_neigh(x).end() - 1);
-  NodeID y_min = *(g.out_neigh(y).begin());
-  NodeID y_max = *(g.out_neigh(y).end() - 1);
+  NodeID x_min = min(x, *(g.out_neigh(x).begin()));
+  NodeID x_max = max(x, *(g.out_neigh(x).end() - 1));
+  NodeID y_min = min(y, *(g.out_neigh(y).begin()));
+  NodeID y_max = max(y, *(g.out_neigh(y).end() - 1));
   return x_min >= y_min && x_max <= y_max && isDense[y];
+}
+
+bool isDenseSeq(const Graph &g, const NodeID u) {
+  if(g.out_degree(u) <= 1)
+    return true;
+
+  auto neigh = g.out_neigh(u);
+  NodeID first = *neigh.begin();
+  NodeID last = *(neigh.end() - 1);
+  NodeID prev = first;
+  bool uFitsInMiddle = false;
+
+  for(auto it = neigh.begin() + 1; it != neigh.end(); it++) {
+    if(!(((prev + 1) == *it) || (((prev + 2) == *it) && (prev + 1 == u)))) {
+      return false;
+    }
+
+    if((((prev + 2) == *it) && (prev + 1 == u))) {
+      uFitsInMiddle = true;
+    }
+
+    prev = *it;
+  }
+
+  return uFitsInMiddle || (((u + 1) == first) || ((last + 1) == u));
 }
 
 
@@ -57,22 +82,7 @@ size_t TCReuseV1(const Graph &g) {
 
   // find all "dense" neighborhoods
   for(NodeID u : g.vertices()) {
-
-    bool dense_node = true;
-    if(g.out_degree(u) > 1) {
-      NodeID prev = *(g.out_neigh(u).begin()); // first neighbor
-
-      for(auto *it = g.out_neigh(u).begin() + 1; it != g.out_neigh(u).end(); ++it) {
-        if((prev + 1) != *it) {
-          dense_node = false;
-          break;
-        }
-
-        prev = *it;
-      }
-    }
-
-    isDense[u] = dense_node;
+    isDense[u] = isDenseSeq(g, u);
     isDeleted[u] = false; // just initialization at this point
   }
 
@@ -80,11 +90,14 @@ size_t TCReuseV1(const Graph &g) {
   // and mark the LHS node of the subset relation as deleted
   for(NodeID u : g.vertices()) {
     for(NodeID v : g.out_neigh(u)) {
-      if(v > u) {
-        break;
+      if(v < u) {
+        continue;
       }
+      cout << "subseteq(" << v << ", " << u << ") = " << subseteq(g, v, u, isDense) << endl;
       if(subseteq(g, v, u, isDense)) {
-        total += g.out_degree(v);
+        cout << "found subset: " << v << " subset " << u << " ";
+        cout << "new  # triangles: " << g.out_degree(v) - 1 << endl;
+        total += g.out_degree(v) - 1; // don't count "u"
         isDeleted[v] = true;
       }
     }
@@ -164,6 +177,8 @@ int main(int argc, char* argv[]) {
     cout << "Input graph is directed but tc requires undirected" << endl;
     return -2;
   }
+
+  g.PrintTopology();
 
   BenchmarkKernel(cli, g, Hybrid, PrintTriangleStats, TCVerifier);
   return 0;
