@@ -20,11 +20,23 @@ using namespace std;
 // a subset of neighborhood of y in constant time doing bounds checking.
 // Both neighborhoods are sorted in increasing order
 bool subseteq(const Graph &g, const NodeID x, const NodeID y, bool *isDense) {
-  NodeID x_min = *(g.out_neigh(x).begin());
-  NodeID x_max = *(g.out_neigh(x).end() - 1);
-  NodeID y_min = min(y, *(g.out_neigh(y).begin()));
-  NodeID y_max = max(y, *(g.out_neigh(y).end() - 1));
-  return x_min >= y_min && x_max <= y_max && isDense[y];
+  auto x_neigh = g.out_neigh(x);
+  auto y_neigh = g.out_neigh(y);
+
+  NodeID x_first = *x_neigh.begin();
+  NodeID x_last = *(x_neigh.end() - 1);
+  NodeID y_first = *y_neigh.begin();
+  NodeID y_last = *(y_neigh.end() - 1);
+
+  if(g.out_degree(x) <= 1)
+    return (x_first == y || (x_first >= y_first && x_last <= y_last)) && isDense[y];
+
+  NodeID x_second = *(x_neigh.begin() + 1);
+  NodeID x_second_last = *(x_neigh.end() - 2);
+  bool front = (x_first == y && x_second >= y_first) || x_first >= y_first;
+  bool back = (x_last == y && x_second_last <= y_last) || x_last <= y_last;
+
+  return front && back && isDense[y];
 }
 
 bool isDenseSeq(const Graph &g, const NodeID u) {
@@ -32,9 +44,7 @@ bool isDenseSeq(const Graph &g, const NodeID u) {
     return true;
 
   auto neigh = g.out_neigh(u);
-  NodeID first = *neigh.begin();
-  NodeID last = *(neigh.end() - 1);
-  NodeID prev = first;
+  NodeID prev = *neigh.begin();
 
   for(auto it = neigh.begin() + 1; it != neigh.end(); it++) {
     if(!(((prev + 1) == *it) || (((prev + 2) == *it) && (prev + 1 == u)))) {
@@ -44,7 +54,7 @@ bool isDenseSeq(const Graph &g, const NodeID u) {
     prev = *it;
   }
 
-  return ((u + 1) == first) || ((last + 1) == u);
+  return true;
 }
 
 
