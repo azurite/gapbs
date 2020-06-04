@@ -20,8 +20,8 @@ using namespace std;
 // a subset of neighborhood of y in constant time doing bounds checking.
 // Both neighborhoods are sorted in increasing order
 bool subseteq(const Graph &g, const NodeID x, const NodeID y, bool *isDense) {
-  NodeID x_min = min(x, *(g.out_neigh(x).begin()));
-  NodeID x_max = max(x, *(g.out_neigh(x).end() - 1));
+  NodeID x_min = *(g.out_neigh(x).begin());
+  NodeID x_max = *(g.out_neigh(x).end() - 1);
   NodeID y_min = min(y, *(g.out_neigh(y).begin()));
   NodeID y_max = max(y, *(g.out_neigh(y).end() - 1));
   return x_min >= y_min && x_max <= y_max && isDense[y];
@@ -32,24 +32,17 @@ bool isDenseSeq(const Graph &g, const NodeID u) {
     return true;
 
   auto neigh = g.out_neigh(u);
-  NodeID first = *neigh.begin();
-  NodeID last = *(neigh.end() - 1);
-  NodeID prev = first;
-  bool uFitsInMiddle = false;
+  NodeID prev = *neigh.begin();
 
   for(auto it = neigh.begin() + 1; it != neigh.end(); it++) {
     if(!(((prev + 1) == *it) || (((prev + 2) == *it) && (prev + 1 == u)))) {
       return false;
     }
 
-    if((((prev + 2) == *it) && (prev + 1 == u))) {
-      uFitsInMiddle = true;
-    }
-
     prev = *it;
   }
 
-  return uFitsInMiddle || (((u + 1) == first) || ((last + 1) == u));
+  return true;
 }
 
 
@@ -87,23 +80,17 @@ size_t TCReuseV1(const Graph &g) {
   }
 
   // start counting triangles with subset neighborhood relation shortcut
-  // and mark the LHS node of the subset relation as deleted
+  // TODO: if v subseteq u then v and it's indicent edges must be removed
   for(NodeID u : g.vertices()) {
     for(NodeID v : g.out_neigh(u)) {
-      if(v < u) {
-        continue;
-      }
-      cout << "subseteq(" << v << ", " << u << ") = " << subseteq(g, v, u, isDense) << endl;
-      if(subseteq(g, v, u, isDense)) {
-        cout << "found subset: " << v << " subset " << u << " ";
-        cout << "new  # triangles: " << g.out_degree(v) - 1 << endl;
+      if(v > u && subseteq(g, v, u, isDense)) {
         total += g.out_degree(v) - 1; // don't count "u"
         isDeleted[v] = true;
       }
     }
   }
 
-  // count the rest of the triangles on the smaller grapg with algorithm
+  // count the rest of the triangles on the smaller graph with algorithm
   // "compact-forward"
   for (NodeID u = 0; u < g.num_nodes(); u++) {
     if(isDeleted[u])
