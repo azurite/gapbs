@@ -32,7 +32,9 @@ bool isDenseSeq(const Graph &g, const NodeID u) {
     return true;
 
   auto neigh = g.out_neigh(u);
-  NodeID prev = *neigh.begin();
+  NodeID first = *neigh.begin();
+  NodeID last = *(neigh.end() - 1);
+  NodeID prev = first;
 
   for(auto it = neigh.begin() + 1; it != neigh.end(); it++) {
     if(!(((prev + 1) == *it) || (((prev + 2) == *it) && (prev + 1 == u)))) {
@@ -42,7 +44,7 @@ bool isDenseSeq(const Graph &g, const NodeID u) {
     prev = *it;
   }
 
-  return true;
+  return ((u + 1) == first) || ((last + 1) == u);
 }
 
 
@@ -68,23 +70,32 @@ the usual "compact-forward" algorithm of M. Latapy.
 */
 size_t TCReuseV1(const Graph &g) {
   size_t total = 0;
-
   size_t n = g.num_nodes();
+
   bool isDense[n];
   bool isDeleted[n];
+  size_t smallerThanOffset[n];
 
-  // find all "dense" neighborhoods
+  // find all "dense" neighborhoods and calculate offsets
   for(NodeID u : g.vertices()) {
     isDense[u] = isDenseSeq(g, u);
+
+    size_t offset = 0;
+    for(NodeID v : g.out_neigh(u)) {
+      if(v >= u)
+        break;
+      offset++;
+    }
+
+    smallerThanOffset[u] = offset;
     isDeleted[u] = false; // just initialization at this point
   }
 
   // start counting triangles with subset neighborhood relation shortcut
-  // TODO: if v subseteq u then v and it's indicent edges must be removed
   for(NodeID u : g.vertices()) {
     for(NodeID v : g.out_neigh(u)) {
       if(v > u && subseteq(g, v, u, isDense)) {
-        total += g.out_degree(v) - 1; // don't count "u"
+        total += g.out_degree(v) - smallerThanOffset[v];
         isDeleted[v] = true;
       }
     }
